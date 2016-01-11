@@ -26,7 +26,7 @@ public class CoAPPacket {
 		if (MIDPool == 0)
 		{
 			Random rand = new Random();
-			MIDPool = rand.nextInt(1 << 14) + 1;
+			MIDPool = rand.nextInt(1 << 15) + 1;
 			this.MESSAGEID = MIDPool;
 		}
 		else
@@ -179,8 +179,11 @@ public class CoAPPacket {
 		}
 		else if (role == 2)
 		{
-			bytePacket[bytePos++] = (byte)0xFF;
-			System.arraycopy(pkt.PAYLOAD.toString().getBytes(), 0, bytePacket, bytePos, pkt.PAYLOADLENGTH);
+			if (pkt.PAYLOADLENGTH > 0)
+			{
+				bytePacket[bytePos++] = (byte)0xFF;
+				System.arraycopy(pkt.PAYLOAD.toString().getBytes(), 0, bytePacket, bytePos, pkt.PAYLOADLENGTH);
+			}
 		}
 
 		// Check bytes of generated packet
@@ -194,14 +197,14 @@ public class CoAPPacket {
 	}
 	
 	protected static void sendPacket(byte[] bytePacket) throws IOException {
-		FileOutputStream output = new FileOutputStream("d:/packet.txt", false);
+		FileOutputStream output = new FileOutputStream("/home/shawn/workspace/CoAP_example/packet.txt", false);
 		output.write(bytePacket);
 		
 		output.close();
 	}
 	
 	protected static void parsePacket() throws IOException  {
-		File file = new File("d:/packet.txt");
+		File file = new File("/home/shawn/workspace/CoAP_example/packet.txt");
 		FileInputStream input = new FileInputStream(file);
 		byte[] bytePacket = new byte[(int)file.length()];
 		input.read(bytePacket);
@@ -301,7 +304,7 @@ public class CoAPPacket {
 			break;			
 		}
 		// parse MessageID
-		rcvPacket.MESSAGEID = (int)((rcvPacket.pktHeader[2] << 8) | rcvPacket.pktHeader[3]);
+		rcvPacket.MESSAGEID = (((rcvPacket.pktHeader[2]) << 8) | rcvPacket.pktHeader[3]) & 0xFFFFFFFF;
 		System.out.printf("...Message ID: 0x%02x%02x (%d)\r\n", rcvPacket.pktHeader[2], rcvPacket.pktHeader[3], rcvPacket.MESSAGEID);
 		
 		if (bytePacket.length < 5)
